@@ -109,6 +109,7 @@ typedef struct dc_uconfig
 	char			data_tty[DEVPATHLEN];		/*!< tty for AT commands */
 	char			imei[IMEI_SIZE+1];		/*!< search device by imei */
 	char			imsi[IMSI_SIZE+1];		/*!< search device by imsi */
+	char			pin[128]; // how long it can be really?
 } dc_uconfig_t;
 
 /* all Config settings join in one place */

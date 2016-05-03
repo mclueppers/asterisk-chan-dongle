@@ -43,6 +43,7 @@ typedef enum {
 
 	CMD_AT_COPS,
 	CMD_AT_COPS_INIT,
+	CMD_AT_CPIN_NUMBER,
 	CMD_AT_CPIN,
 	CMD_AT_CPMS,
 

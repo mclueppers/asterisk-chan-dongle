@@ -135,6 +135,7 @@ static int at_response_ok (struct pvt* pvt, at_res_t res)
 			case CMD_AT_CGSN:
 			case CMD_AT_CIMI:
 			case CMD_AT_CPIN:
+			case CMD_AT_CPIN_NUMBER:
 			case CMD_AT_CCWA_SET:
 			case CMD_AT_CCWA_STATUS:
 			case CMD_AT_CHLD_2:
@@ -363,6 +364,11 @@ static int at_response_error (struct pvt* pvt, at_res_t res)
 			case CMD_AT_CIMI:
 				ast_log (LOG_ERROR, "[%s] Getting IMSI number failed\n", PVT_ID(pvt));
 				goto e_return;
+
+			case CMD_AT_CPIN_NUMBER:
+				ast_log (LOG_ERROR, "[%s] Error sending PIN - ignored\n", PVT_ID(pvt));
+				break;
+				//goto e_return;
 
 			case CMD_AT_CPIN:
 				ast_log (LOG_ERROR, "[%s] Error checking PIN state\n", PVT_ID(pvt));
@@ -1348,7 +1354,7 @@ static int at_response_cusd (struct pvt * pvt, char * str, size_t len)
 
 	// FIXME: strictly check USSD encoding and detect encoding
 	if ((dcs == 0 || dcs == 15) && !pvt->cusd_use_ucs2_decoding)
-		ussd_encoding = STR_ENCODING_7BIT_HEX;
+		ussd_encoding = STR_ENCODING_7BIT_HEX_PAD_0;
 	else
 		ussd_encoding = STR_ENCODING_UCS2_HEX;
 	res = str_recode (RECODE_DECODE, ussd_encoding, cusd, strlen (cusd), cusd_utf8_str, sizeof (cusd_utf8_str));

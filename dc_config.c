@@ -37,11 +37,13 @@ static int dc_uconfig_fill(struct ast_config * cfg, const char * cat, struct dc_
 	const char * data_tty;
 	const char * imei;
 	const char * imsi;
+	const char * pin;
 
 	audio_tty = ast_variable_retrieve (cfg, cat, "audio");
 	data_tty  = ast_variable_retrieve (cfg, cat, "data");
 	imei = ast_variable_retrieve (cfg, cat, "imei");
 	imsi = ast_variable_retrieve (cfg, cat, "imsi");
+	pin = ast_variable_retrieve (cfg, cat, "pin");
 
 	if(imei && strlen(imei) != IMEI_SIZE) {
 		ast_log (LOG_WARNING, "[%s] Ignore invalid IMEI value '%s'\n", cat, imei);
@@ -50,6 +52,10 @@ static int dc_uconfig_fill(struct ast_config * cfg, const char * cat, struct dc_
 	if(imsi && strlen(imsi) != IMSI_SIZE) {
 		ast_log (LOG_WARNING, "[%s] Ignore invalid IMSI value '%s'\n", cat, imsi);
 		imsi = NULL;
+		}
+	if(pin && strlen(pin) == 0) {
+		ast_log (LOG_WARNING, "[%s] Ignore invalid PIN value '%s'\n", cat, pin);
+		pin = NULL;
 		}
 
 	if(!audio_tty && !imei && !imsi)
@@ -75,6 +81,7 @@ static int dc_uconfig_fill(struct ast_config * cfg, const char * cat, struct dc_
 	ast_copy_string (config->audio_tty,	S_OR(audio_tty, ""), sizeof (config->audio_tty));
 	ast_copy_string (config->imei,		S_OR(imei, ""),	     sizeof (config->imei));
 	ast_copy_string (config->imsi,		S_OR(imsi, ""),	     sizeof (config->imsi));
+	ast_copy_string (config->pin,		S_OR(pin, ""),	     sizeof (config->pin));
 
 	return 0;
 }

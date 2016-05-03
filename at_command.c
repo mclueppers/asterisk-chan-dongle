@@ -148,6 +148,7 @@ EXPORT_DEF int at_enque_initialization(struct cpvt* cpvt, at_cmd_t from_command)
 		ATQ_CMD_DECLARE_ST(CMD_AT_CGMR, cmd8),		/* Get software version */
 		ATQ_CMD_DECLARE_ST(CMD_AT_CMEE, cmd9),		/* set MS Error Report to 'ERROR' only  TODO: change to 1 or 2 and add support in response handlers */
 
+		ATQ_CMD_DECLARE_DYNI(CMD_AT_CPIN_NUMBER),
 		ATQ_CMD_DECLARE_ST(CMD_AT_CGSN, cmd10),		/* IMEI Read */
 		ATQ_CMD_DECLARE_ST(CMD_AT_CIMI, cmd11),		/* IMSI Read */
 		ATQ_CMD_DECLARE_ST(CMD_AT_CPIN, cmd12),		/* check is password authentication requirement and the remainder validation times */
@@ -173,6 +174,7 @@ EXPORT_DEF int at_enque_initialization(struct cpvt* cpvt, at_cmd_t from_command)
 	unsigned in, out;
 	int begin = -1;
 	int err;
+	char * ptmp0 = NULL;
 	char * ptmp1 = NULL;
 	char * ptmp2 = NULL;
 	pvt_t * pvt = cpvt->pvt;
@@ -193,10 +195,18 @@ EXPORT_DEF int at_enque_initialization(struct cpvt* cpvt, at_cmd_t from_command)
 			continue;
 		if(st_cmds[in].cmd == CMD_AT_U2DIAG && CONF_SHARED(pvt, u2diag) == -1)
 			continue;
+		if(st_cmds[in].cmd == CMD_AT_CPIN_NUMBER && (!CONF_UNIQ(pvt, pin) || !strlen(CONF_UNIQ(pvt, pin))))
+			continue;
 
 		memcpy(&cmds[out], &st_cmds[in], sizeof(st_cmds[in]));
 
-		if(cmds[out].cmd == CMD_AT_U2DIAG)
+		if(st_cmds[in].cmd == CMD_AT_CPIN_NUMBER) {
+			err = at_fill_generic_cmd(&cmds[out], "AT+CPIN=\"%s\"\r", CONF_UNIQ(pvt, pin));
+			if (err)
+				goto failure;
+			ptmp0 = cmds[out].data;
+		}
+		else if(cmds[out].cmd == CMD_AT_U2DIAG)
 		{
 			err = at_fill_generic_cmd(&cmds[out], "AT^U2DIAG=%d\r", CONF_SHARED(pvt, u2diag));
 			if(err)
@@ -219,6 +229,8 @@ EXPORT_DEF int at_enque_initialization(struct cpvt* cpvt, at_cmd_t from_command)
 		return at_queue_insert(cpvt, cmds, out, 0);
 	return 0;
 failure:
+	if(ptmp0)
+		ast_free(ptmp0);
 	if(ptmp1)
 		ast_free(ptmp1);
 	if(ptmp2)
@@ -418,7 +430,7 @@ EXPORT_DEF int at_enque_ussd (struct cpvt * cpvt, const char * code, attribute_u
 	length = STRLEN(cmd);
 
 	if (pvt->cusd_use_7bit_encoding)
-		cusd_encoding = STR_ENCODING_7BIT_HEX;
+		cusd_encoding = STR_ENCODING_7BIT_HEX_PAD_0;
 	else if (pvt->use_ucs2_encoding)
 		cusd_encoding = STR_ENCODING_UCS2_HEX;
 	else
